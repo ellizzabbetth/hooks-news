@@ -5,6 +5,8 @@ export default function App(){
   // when state is set our components rerender
   const [results, setResults] = useState([]);
   const [query, setQuery] = useState('react hooks');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const searchInputRef = useRef();
 
   // useEffects runs after every rerender
@@ -18,8 +20,15 @@ export default function App(){
   // conents of useEffect function runs only on componentMount
   // and not on any updates
   const getResults = async () => {
-    const response = await axios.get(`http://hn.algolia.com/api/v1/search?query=${query}`)
-    setResults(response.data.hits);
+    setLoading(true);
+    try{
+      const response = await axios.get(`http://hn.algolia.com/api/v1/search?query=${query}`)
+      setResults(response.data.hits);
+    } catch(err) {
+      setError(err);
+    }
+
+    setLoading(false);
   }
 
   const handleSearch = event => {
@@ -45,13 +54,18 @@ export default function App(){
       <button type="submit" >Search</button>
       <button type="button" onClick={handleClearSearch}>Clear</button>
     </form>
-    <ul>
+    {loading ? (
+      <div>Loading result ...</div>
+    ) : (
+      <ul>
       {results.map(result => (
         <li key={result.objectID}>
         <a href={result.url}>{result.title}</a>
         </li>
       ))}
     </ul>
+  )}
+    {error && <div>{error.message}</div>}
     </>
   );
 }
